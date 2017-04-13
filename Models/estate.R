@@ -14,6 +14,11 @@ years=c(1996,1999,2003,2006,2008,2010,2012)
 coords = apply(as.matrix(carroyage@data[,1:3]),c(1,2),as.numeric)
 spcapital = merge(capital,coords,by.x=2,by.y=1)
 
+
+# basic stats
+hist(log(capital[,3:9]),breaks=100)
+
+
 # check time-series regularity
 
 #####
