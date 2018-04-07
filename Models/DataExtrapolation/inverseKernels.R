@@ -123,6 +123,8 @@ inverseKernels<-function(histogram,weights,ker,initialParams,paramsBounds = NULL
   }
   
   if(optimMethod=="ga"){
+    show(paste0("Optimisation with GA (",iters.max," iterations)"))
+    show(bounds)
     optim = ga(type="real-valued",
                fitness=function(x){-f(x)},
                min=bounds$lower,
@@ -171,13 +173,19 @@ quantilesToHist<-function(q){
 
 
 plotRes <- function(res){
-  if(max(res$histogram$density)>max(res$fittedHist)){
-    plot(res$histogram$mids,res$histogram$density,type='l')
-    points(res$histogram$mids,res$fittedHist,type='l',col='blue')
-  }else{
-    plot(res$histogram$mids,res$fittedHist,type='l',col='blue')
-    points(res$histogram$mids,res$histogram$density,type='l')
-  }
+  # if(max(res$histogram$density)>max(res$fittedHist)){
+  #   plot(res$histogram$mids,res$histogram$density,type='l')
+  #   points(res$histogram$mids,res$fittedHist,type='l',col='blue')
+  # }else{
+  #   plot(res$histogram$mids,res$fittedHist,type='l',col='blue')
+  #   points(res$histogram$mids,res$histogram$density,type='l')
+  # }
+  ylim = c(min(min(res$histogram$density),min(res$fittedHist)),max(max(res$histogram$density),max(res$fittedHist)))
+  xlim = c(min(min(res$histogram$mids),min(res$parameters)),max(max(res$histogram$mids),max(res$parameters)))
+
+  plot(res$histogram$mids,res$fittedHist,type='l',col='blue',xlim=xlim,ylim=ylim)
+  points(res$histogram$mids,res$histogram$density,type='l')  
+  
   for(p in 1:length(res$parameters)){
     abline(v=res$parameters[p],col='red');
   }

@@ -22,7 +22,8 @@ structure <- as.tbl(read.csv(file='data/structure11.csv',sep=';',stringsAsFactor
 
 ## agregation to construct overall income distrib
 
-iris=956800114
+#iris=956800114
+iris=751207710
 distr = c(unlist(income[income$IRIS==iris,c("RFUCD111","RFUCD211","RFUCD311","RFUCD411","RFUCQ211","RFUCD611","RFUCD711","RFUCD811","RFUCD911")]))
 shares = c(unlist(structure[structure$IRIS==iris,c("ART","CAD","INT","EMP","OUV")]))#/c(unlist(structure[structure$IRIS==iris,"POPTOT"]))
 shares=shares/sum(shares)
@@ -31,15 +32,18 @@ gmeds = gincome$X2011[2:6]
 res = inverseKernels(histogram =quantilesToHist(distr),
                      weights = shares,
                      ker = fixedSdGaussian(5000),
-                     initialParams = gmeds,
-                     paramsBounds=list(lower=rep(5000,length(shares)),upper=rep(100000,length(shares))),
-                     iters.max = 10000
+                     initialParams = rep(median(distr),length(shares)),
+                     paramsBounds=list(lower=rep(min(distr),length(shares)),upper=rep(max(distr),length(shares))),
+                     iters.max = 100
 )
 plotRes(res)
 
 # test with variable width kernel
-initialParams = c(gmeds[1],2000,gmeds[2],2000,gmeds[3],2000,gmeds[4],2000,gmeds[5],2000)
-paramsBounds = list(lower=c(5000,100,5000,100,5000,100,5000,100,5000,100),upper=c(100000,10000,100000,10000,100000,10000,100000,10000,100000,10000))
+#initialParams = c(gmeds[1],2000,gmeds[2],2000,gmeds[3],2000,gmeds[4],2000,gmeds[5],2000)
+#paramsBounds = list(lower=c(5000,100,5000,100,5000,100,5000,100,5000,100),upper=c(100000,10000,100000,10000,100000,10000,100000,10000,100000,10000))
+
+initialParams = rep(c(median(distr),1000),length(shares))
+paramsBounds = list(lower=rep(c(min(distr),100),length(shares)),upper=rep(c(max(distr),10000),length(shares)))
 h=quantilesToHist(distr)
 res = inverseKernels(histogram =h,
                      weights = shares,
