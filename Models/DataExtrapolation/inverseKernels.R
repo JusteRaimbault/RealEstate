@@ -157,6 +157,14 @@ gaussianKernel<-function(){
   return(function(x,pars){mu=pars[1];sigma=pars[2];return(1/sqrt(2*pi*sigma)*exp(-(x-mu)^2/(2*sigma^2)))})
 }
 
+logNormalKernel<-function(){
+  return(function(x,pars){
+    mu=pars[1];sigma=pars[2];
+    return(1/sqrt(2*pi*sigma*x)*exp(-(log(x)-mu)^2/(2*sigma^2)))
+  })
+}
+
+plot(logNormalKernel()((1:1000)/100,c(0,1)))
 
 #'
 #' transform vector of quantiles to an histogram object

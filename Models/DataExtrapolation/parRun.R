@@ -28,7 +28,7 @@ estimations <- foreach(iris=income$IRIS) %dopar% {
                          ker = gaussianKernel(),
                          initialParams = initialParams,
                          paramsBounds=paramsBounds,
-                         iters.max = 10000
+                         iters.max = 10
     )
     return(res)
   })
