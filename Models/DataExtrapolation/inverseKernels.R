@@ -210,6 +210,9 @@ estimateParameters<-function(iris,income,structure,year,iters.max=1000,
     res$shares = shares
     res$distrib = distrib
     
+    res$gaussianvalmax = resgaussian$valmax
+    res$lognormalvalmax = reslognormal$valmax
+    
     return(res)
   }else{return(NA)}
 }
