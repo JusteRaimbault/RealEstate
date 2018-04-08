@@ -17,6 +17,7 @@ income <- as.tbl(read.csv(file='data/revenus11.csv',sep=';',stringsAsFactors = F
 gincome <-as.tbl(read.csv(file='data/revenus_csp_idf.csv',sep=';',stringsAsFactors = F))
 # ranks of csp through the years
 #apply(gincome[2:nrow(gincome),2:ncol(gincome)],MARGIN = 2,function(x){unlist(gincome[2:nrow(gincome),1])[order(x)]})
+# gincome[2:nrow(gincome),1][order(unlist(gincome[2:nrow(gincome),2])),]
 
 # population structure
 structure <- as.tbl(read.csv(file='data/structure11.csv',sep=';',stringsAsFactors = F))
@@ -24,13 +25,13 @@ structure <- as.tbl(read.csv(file='data/structure11.csv',sep=';',stringsAsFactor
 
 ## agregation to construct overall income distrib
 
-#iris=956800114
+iris=956800114
 #iris=751062304
 
 
-for(i in 1:100){
+#for(i in 1:100){
 #i=1
-  iris=income$IRIS[i]
+#  iris=income$IRIS[i]
   show(iris)
 distr = c(unlist(income[income$IRIS==iris,c("RFUCD111","RFUCD211","RFUCD311","RFUCD411","RFUCQ211","RFUCD611","RFUCD711","RFUCD811","RFUCD911")]))
 shares = c(unlist(structure[structure$IRIS==iris,c("ART","CAD","INT","EMP","OUV")]))#/c(unlist(structure[structure$IRIS==iris,"POPTOT"]))
@@ -59,10 +60,26 @@ res = inverseKernels(histogram =h,
                      ker = gaussianKernel(),
                      initialParams = initialParams,
                      paramsBounds=paramsBounds,
-                     iters.max = 10
+                     iters.max = 100
 )
-#plotRes(res)
+plotRes(res)
 
-}
+#}
+
+
+
+# test log-normal kernels
+initialParams = rep(c(median(log(distr),na.rm=T),1),length(shares))
+paramsBounds = list(lower=rep(c(min(log(distr),na.rm=T),0.1),length(shares)),upper=rep(c(max(log(distr),na.rm=T),2),length(shares)))
+h=quantilesToHist(distr)
+show(paramsBounds)
+res = inverseKernels(histogram =h,
+                     weights = shares,
+                     ker = logNormalKernel(),
+                     initialParams = initialParams,
+                     paramsBounds=paramsBounds,
+                     iters.max = 100
+)
+plotRes(res)
 
 

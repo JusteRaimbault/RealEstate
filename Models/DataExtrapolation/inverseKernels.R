@@ -6,6 +6,8 @@
 
 library(GA)
 library(MASS)
+library(dplyr)
+
 
 ###############
 #' 
@@ -130,7 +132,7 @@ inverseKernels<-function(histogram,weights,ker,initialParams,paramsBounds = NULL
                min=bounds$lower,
                max=bounds$upper,
                maxiter=iters.max,
-               popSize = 1000,parallel = 4
+               popSize = 1000,parallel = 1
     )
     parmin=optim@solution
     valmax = optim@fitness
@@ -145,6 +147,73 @@ inverseKernels<-function(histogram,weights,ker,initialParams,paramsBounds = NULL
   
   return(res)
 }
+
+
+
+#''
+#' General function estimating parameter for homogenous kernels (tested : gaussian and log-normal)
+#'
+estimateParameters<-function(iris,income,structure,year,iters.max=1000,
+                             structure_col_names=c("ART","CAD","INT","EMP","OUV"),
+                             csp_ordered=c("EMP","OUV","INT","ART","CAD")){
+  income_col_names=paste0(c("RFUCD1","RFUCD2","RFUCD3","RFUCD4","RFUCQ2","RFUCD6","RFUCD7","RFUCD8","RFUCD9"),year)
+  distr = c(unlist(income[income$IRIS==iris,income_col_names]))
+  if(length(which(is.na(distr)))==0){
+    shares = c(unlist(structure[structure$IRIS==iris,structure_col_names]))#/c(unlist(structure[structure$IRIS==iris,"POPTOT"]))
+    shares=shares/sum(shares)
+    
+    # gaussian fit
+    initialParams = rep(c(median(distr,na.rm=T),1000),length(shares))
+    paramsBounds = list(lower=rep(c(min(distr,na.rm=T),100),length(shares)),upper=rep(c(max(distr,na.rm=T),10000),length(shares)))
+    h=quantilesToHist(distr)
+    resgaussian = inverseKernels(histogram=h,
+                       weights = shares,
+                       ker = gaussianKernel(),
+                       initialParams = initialParams,
+                       paramsBounds=paramsBounds,
+                       iters.max = iters.max
+    )
+    
+    # log normal fit
+    initialParams = rep(c(median(log(distr),na.rm=T),1),length(shares))
+    paramsBounds = list(lower=rep(c(min(log(distr),na.rm=T),0.1),length(shares)),upper=rep(c(max(log(distr),na.rm=T),2),length(shares)))
+    h=quantilesToHist(distr)
+    reslognormal = inverseKernels(histogram =h,
+                         weights = shares,
+                         ker = logNormalKernel(),
+                         initialParams = initialParams,
+                         paramsBounds=paramsBounds,
+                         iters.max = iters.max
+    )
+    
+    if(resgaussian$valmax > reslognormal$valmax){
+      distrib = "gaussian"
+      res = resgaussian
+      avincome = resgaussian$parameters[seq(from=1,to=length(resgaussian$parameters),by=2)]
+      medincome = resgaussian$parameters[seq(from=1,to=length(resgaussian$parameters),by=2)]
+      stdincome = resgaussian$parameters[seq(from=2,to=length(resgaussian$parameters),by=2)]
+      ord = order(medincome);names(avincome)=csp_ordered[ord];names(medincome)=csp_ordered[ord];names(stdincome)=csp_ordered[ord]
+    }else{
+      distrib = "lognormal"
+      res = reslognormal
+      mu = reslognormal$parameters[seq(from=1,to=length(reslognormal$parameters),by=2)]
+      sigma = reslognormal$parameters[seq(from=2,to=length(reslognormal$parameters),by=2)]
+      avincome = exp(mu + sigma^2/2)
+      medincome = exp(mu)
+      stdincome = sqrt(exp(2*mu + sigma^2)*(exp(sigma^2)-1))
+      ord = order(medincome);names(avincome)=csp_ordered[ord];names(medincome)=csp_ordered[ord];names(stdincome)=csp_ordered[ord]
+    }
+    
+    res$avincome = avincome
+    res$medincome = medincome
+    res$stdincome = stdincome
+    res$shares = shares
+    res$distrib = distrib
+    
+    return(res)
+  }else{return(NA)}
+}
+
 
 
 #'
@@ -164,7 +233,7 @@ logNormalKernel<-function(){
   })
 }
 
-plot(logNormalKernel()((1:1000)/100,c(0,1)))
+#plot((1:1000)/100,logNormalKernel()((1:1000)/100,c(9.085910,6.907755)))
 
 #'
 #' transform vector of quantiles to an histogram object
@@ -202,6 +271,40 @@ plotRes <- function(res){
 
 
 
+#'
+#' specific function to load income data
+getIncome <- function(year){return(as.tbl(read.csv(file=paste0('data/revenus',year,'.csv'),sep=';',stringsAsFactors = F,header = T,dec = ',' )))}
+
+#'
+#' structure
+getStructure <- function(year,cols=c('ART','CAD','INT','EMP','OUV')){
+  income = as.tbl(read.csv(file=paste0('data/revenus',year,'.csv'),sep=';',stringsAsFactors = F,header = T,dec = ',' ))
+  structure99 = read.csv(file='data/structure99.csv',sep=';',stringsAsFactors = F);rownames(structure99)=structure99$IRIS
+  structure07 = read.csv(file='data/structure07.csv',sep=';',stringsAsFactors = F);rownames(structure07)=structure07$IRIS
+  structure11 = read.csv(file='data/structure11.csv',sep=';',stringsAsFactors = F);rownames(structure11)=structure11$IRIS
+  
+  numyear = as.numeric(paste0('20',year))
+  
+  if(numyear > 1999&numyear <= 2007){
+    leftst = structure99[as.character(income$IRIS),];rightst = structure07[as.character(income$IRIS),]
+    leftyear=1999;rightyear = 2007
+  }
+  if(numyear > 2007&numyear <= 2011){
+    leftst = structure07[as.character(income$IRIS),];rightst = structure11[as.character(income$IRIS),]
+    leftyear=2007;rightyear = 2011
+  }
+  
+  rownames(leftst)<-as.character(income$IRIS)
+  leftst[which(apply(leftst,1,function(r){length(which(is.na(r)))>0})),]<-rep(0,ncol(leftst));leftst$IRIS=as.character(income$IRIS)
+  rownames(rightst)<-as.character(income$IRIS)
+  rightst[which(apply(rightst,1,function(r){length(which(is.na(r)))>0})),]<-rep(0,ncol(rightst));rightst$IRIS=as.character(income$IRIS)
+  
+  structure = (rightst[,cols] - leftst[,cols]) / (rightyear - leftyear) * numyear + leftst[,cols] - leftyear * (rightst[,cols] - leftst[,cols]) / (rightyear - leftyear) 
+  structure$IRIS = as.character(income$IRIS)
+  
+  return(structure)
+  
+}
 
 
 
