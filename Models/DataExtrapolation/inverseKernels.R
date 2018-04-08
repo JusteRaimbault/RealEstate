@@ -104,7 +104,7 @@ inverseKernels<-function(histogram,weights,ker,initialParams,paramsBounds = NULL
   
   # get num of args
   nparams = length(bounds$lower)/length(weights)
-  show(nparams)
+  #show(nparams)
   
   # optim procedure
   parmin=initialParams
