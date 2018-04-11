@@ -1,0 +1,47 @@
+
+val i = Val[Int]
+val year = Val[String]
+
+// res
+val iris = Val[String]
+val medianIncome = Val[Array[Double]]
+val avgIncome = Val[Array[Double]]
+
+val extrapolate =  RTask("""
+      source('inverseKernels.R')
+      income <- getIncome(year)
+      structure <-getStructure(year)
+      if(i <= length(income)){
+        iris = income$IRIS[i]
+        est = estimateParameters(iris,income,structure,year,iters.max=10)
+        med = est$medincome
+        avg = est$avincome
+      }
+    """,
+    libraries = Seq("GA","MASS","dplyr")
+    ) set(
+      resources += workDirectory / "inverseKernels.R",
+      rInputs += (year, "year"),
+      rInputs += (i,"i"),
+      rOutputs += ("iris",iris),
+      rOutputs += ("med",medianIncome),
+      rOutputs += ("avg",avgIncome),
+      inputs += (year,i)
+      outputs += (year,i)
+    )
+
+val purpose = "TEST"
+
+val indics = = CSVHook(workDirectory / "res" / "extrapolate"+purpose+".csv") set (singleRow := true)
+
+//val grid =  EGIEnvironment("vo.complex-systems.eu")
+val local = LocalEnvironment(10)
+
+// exploration
+val extrapolateall = DirectSampling(
+    evaluation = extrapolate hook indics on grid,
+    sampling = (year in Seq("01","02","04","05","06","07","08","09","10","11")) x (i is 20)//(i in 1 to 4175 by 1)
+)
+
+
+extrapolateall
