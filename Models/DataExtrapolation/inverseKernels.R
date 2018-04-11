@@ -192,7 +192,7 @@ estimateParameters<-function(iris,income,structure,year,iters.max=1000,
       avincome = resgaussian$parameters[seq(from=1,to=length(resgaussian$parameters),by=2)]
       medincome = resgaussian$parameters[seq(from=1,to=length(resgaussian$parameters),by=2)]
       stdincome = resgaussian$parameters[seq(from=2,to=length(resgaussian$parameters),by=2)]
-      ord = order(medincome);names(avincome)=csp_ordered[ord];names(medincome)=csp_ordered[ord];names(stdincome)=csp_ordered[ord]
+      ord = order(medincome);
     }else{
       distrib = "lognormal"
       res = reslognormal
@@ -201,9 +201,20 @@ estimateParameters<-function(iris,income,structure,year,iters.max=1000,
       avincome = exp(mu + sigma^2/2)
       medincome = exp(mu)
       stdincome = sqrt(exp(2*mu + sigma^2)*(exp(sigma^2)-1))
-      ord = order(medincome);names(avincome)=csp_ordered[ord];names(medincome)=csp_ordered[ord];names(stdincome)=csp_ordered[ord]
+      ord = order(medincome);
     }
-    
+  
+   medincome=medincome[ord];avincome=avincome[ord];stdincome=stdincome[ord];shares=shares[ord]
+   names(avincome)=csp_ordered;names(medincome)=csp_ordered;names(stdincome)=csp_ordered;names(shares)=csp_ordered
+
+   #show(csp_ordered[ord])
+   #show("--------------")
+   #show(medincome)
+   #show("--------------")
+   #show(medincome[csp_ordered])
+   #show(ord)
+   #show("****************")
+
     res$avincome = avincome
     res$medincome = medincome
     res$stdincome = stdincome
