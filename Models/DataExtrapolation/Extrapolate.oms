@@ -18,7 +18,7 @@ val extrapolate =  RTask("""
       show(paste0("year = ",year," ; ",nrow(income)))
       if(i <= nrow(income)){
         iris = income$IRIS[i]
-        est = estimateParameters(iris,income,structure,year,iters.max=10)
+        est = estimateParameters(iris,income,structure,year,iters.max=500)
         med = est$medincome
         avg = est$avincome
 	shares = est$shares
