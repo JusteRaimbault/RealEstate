@@ -153,13 +153,17 @@ inverseKernels<-function(histogram,weights,ker,initialParams,paramsBounds = NULL
 #''
 #' General function estimating parameter for homogenous kernels (tested : gaussian and log-normal)
 #'
-estimateParameters<-function(iris,income,structure,year,iters.max=1000,
+estimateParameters<-function(id,income,structure,year,iters.max=1000,
                              structure_col_names=c("ART","CAD","INT","EMP","OUV"),
-                             csp_ordered=c("EMP","OUV","INT","ART","CAD")){
+                             csp_ordered=c("EMP","OUV","INT","ART","CAD"),
+                             idcol='IRIS'
+                             ){
   income_col_names=paste0(c("RFUCD1","RFUCD2","RFUCD3","RFUCD4","RFUCQ2","RFUCD6","RFUCD7","RFUCD8","RFUCD9"),year)
-  distr = c(unlist(income[income$IRIS==iris,income_col_names]))
+  distr = c(unlist(income[income[[idcol]]==id,income_col_names]))
+  
+  # compute only for full distribs
   if(length(which(is.na(distr)))==0){
-    shares = c(unlist(structure[structure$IRIS==iris,structure_col_names]))#/c(unlist(structure[structure$IRIS==iris,"POPTOT"]))
+    shares = c(unlist(structure[structure[[idcol]]==id,structure_col_names]))
     shares=shares/sum(shares)
     
     # gaussian fit
@@ -287,7 +291,10 @@ plotRes <- function(res){
 
 #'
 #' specific function to load income data
-getIncome <- function(year){return(as.tbl(read.csv(file=paste0('data/revenus',year,'.csv'),sep=';',stringsAsFactors = F,header = T,dec = ',' )))}
+getIncome <- function(year,idcol='IRIS'){
+  incfile = paste0('data/revenus',ifelse(idcol=='COM',paste0('_com',year),year),'.csv')
+  return(as.tbl(read.csv(file=incfile,sep=';',stringsAsFactors = F,header = T,dec = ',' )))
+}
 
 #'
 #' structure
@@ -324,7 +331,7 @@ getStructure <- function(year,cols=c('ART','CAD','INT','EMP','OUV'),idcol="IRIS"
   rightst[which(apply(rightst,1,function(r){length(which(is.na(r)))>0})),]<-rep(0,ncol(rightst));rightst[[idcol]]=as.character(income[[idcol]])
   
   structure = (rightst[,cols] - leftst[,cols]) / (rightyear - leftyear) * numyear + leftst[,cols] - leftyear * (rightst[,cols] - leftst[,cols]) / (rightyear - leftyear) 
-  structure$IRIS = as.character(income$IRIS)
+  structure[[idcol]] = as.character(income[[idcol]])
   
   return(structure)
   
