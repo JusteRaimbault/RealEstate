@@ -228,8 +228,10 @@ estimateParameters<-function(id,income,structure,year,iters.max=1000,
     res$gaussianvalmax = resgaussian$valmax
     res$lognormalvalmax = reslognormal$valmax
     
+    res$id = id
+    
     return(res)
-  }else{return(list(avincome=rep(0,5),medincome=rep(0,5),stdincome=rep(0,5),shares=rep(0,5),distrib="",gaussianvalmax=0,lognormalvalmax=0))}
+  }else{return(list(avincome=rep(0,5),medincome=rep(0,5),stdincome=rep(0,5),shares=rep(0,5),distrib="",gaussianvalmax=0,lognormalvalmax=0,id=""))}
 }
 
 

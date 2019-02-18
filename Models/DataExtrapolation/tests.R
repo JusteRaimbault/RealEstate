@@ -29,7 +29,7 @@ show(paste0("year = ",year," ; ",nrow(income)))
 
 show(est)
 
-
+sum(as.numeric(apply(income,1,function(r){length(which(is.na(r)))==0})))
 
 
 
