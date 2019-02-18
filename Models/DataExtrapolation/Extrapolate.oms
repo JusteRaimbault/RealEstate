@@ -5,7 +5,7 @@ val i = Val[Int]
 val year = Val[String]
 
 // res
-val iris = Val[String]
+val com = Val[String]
 val medianIncome = Val[Array[Double]]
 val avgIncome = Val[Array[Double]]
 val stdIncome = Val[Array[Double]]
@@ -41,7 +41,7 @@ val extrapolate =  RTask("""
       resources += workDirectory / "data",
       inputs += year mapped "year",
       inputs += i mapped "i",
-      outputs += com mapped "com",
+      outputs += com mapped "id",
       outputs += medianIncome mapped "med",
       outputs += avgIncome mapped "avg",
       outputs += stdIncome mapped "std",
