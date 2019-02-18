@@ -42,6 +42,12 @@ stopCluster(cl)
 ##
 #load('res/est_gaussian_2011.RData')
 
+for(year in years){
+  
+  
+  
+}
+
 
 
 
