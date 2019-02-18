@@ -18,7 +18,7 @@ for(year in years){
   income <- getIncome(year,idcol=idcol)
   structure <-getStructure(year,idcol=idcol)
     
-  #n = length(income$IRIS)
+  n = length(income[[idcol]])
   #show(n)
   
   
@@ -32,7 +32,7 @@ for(year in years){
      return(estimateParameters(id,income,structure,year,iters.max=500,idcol=idcol))
    }
    
-   save(estimations,file=paste0('res/est_gaussian_20',year,'.RData'))
+   save(estimations,file=paste0('res/extr_20',year,'_',idcol,'.RData'))
    #save(estimations,file=paste0('res/testrem_',year,'.RData'))
    
 }
