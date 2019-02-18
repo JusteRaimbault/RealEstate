@@ -291,27 +291,37 @@ getIncome <- function(year){return(as.tbl(read.csv(file=paste0('data/revenus',ye
 
 #'
 #' structure
-getStructure <- function(year,cols=c('ART','CAD','INT','EMP','OUV')){
-  income = as.tbl(read.csv(file=paste0('data/revenus',year,'.csv'),sep=';',stringsAsFactors = F,header = T,dec = ',' ))
-  structure99 = read.csv(file='data/structure99.csv',sep=';',stringsAsFactors = F);rownames(structure99)=structure99$IRIS
-  structure07 = read.csv(file='data/structure07.csv',sep=';',stringsAsFactors = F);rownames(structure07)=structure07$IRIS
-  structure11 = read.csv(file='data/structure11.csv',sep=';',stringsAsFactors = F);rownames(structure11)=structure11$IRIS
+getStructure <- function(year,cols=c('ART','CAD','INT','EMP','OUV'),idcol="IRIS"){
+  
+  # change income file name in case of a commune aggregation
+  incfile = paste0('data/revenus',ifelse(idcol=='COM',paste0('_com',year),year),'.csv')
+  
+  income = as.tbl(read.csv(file=incfile,sep=';',stringsAsFactors = F,header = T,dec = ',' ))
+  structure99 = read.csv(file='data/structure99.csv',sep=';',stringsAsFactors = F);
+  if(idcol=='COM'){structure99=as.data.frame(as.tbl(structure99)%>%group_by(COM)%>%summarize(ART=sum(ART),CAD=sum(CAD),INT=sum(INT),EMP=sum(EMP),OUV=sum(OUV)))}
+  rownames(structure99)=structure99[[idcol]]
+  structure07 = read.csv(file='data/structure07.csv',sep=';',stringsAsFactors = F);
+  if(idcol=='COM'){structure07=as.data.frame(as.tbl(structure07)%>%group_by(COM)%>%summarize(ART=sum(ART),CAD=sum(CAD),INT=sum(INT),EMP=sum(EMP),OUV=sum(OUV)))}
+  rownames(structure07)=structure07[[idcol]]
+  structure11 = read.csv(file='data/structure11.csv',sep=';',stringsAsFactors = F);
+  if(idcol=='COM'){structure11=as.data.frame(as.tbl(structure11)%>%group_by(COM)%>%summarize(ART=sum(ART),CAD=sum(CAD),INT=sum(INT),EMP=sum(EMP),OUV=sum(OUV)))}
+  rownames(structure11)=structure11[[idcol]]
   
   numyear = as.numeric(paste0('20',year))
   
   if(numyear > 1999&numyear <= 2007){
-    leftst = structure99[as.character(income$IRIS),];rightst = structure07[as.character(income$IRIS),]
+    leftst = structure99[as.character(income[[idcol]]),];rightst = structure07[as.character(income[[idcol]]),]
     leftyear=1999;rightyear = 2007
   }
   if(numyear > 2007&numyear <= 2011){
-    leftst = structure07[as.character(income$IRIS),];rightst = structure11[as.character(income$IRIS),]
+    leftst = structure07[as.character(income[[idcol]]),];rightst = structure11[as.character(income[[idcol]]),]
     leftyear=2007;rightyear = 2011
   }
   
-  rownames(leftst)<-as.character(income$IRIS)
-  leftst[which(apply(leftst,1,function(r){length(which(is.na(r)))>0})),]<-rep(0,ncol(leftst));leftst$IRIS=as.character(income$IRIS)
-  rownames(rightst)<-as.character(income$IRIS)
-  rightst[which(apply(rightst,1,function(r){length(which(is.na(r)))>0})),]<-rep(0,ncol(rightst));rightst$IRIS=as.character(income$IRIS)
+  rownames(leftst)<-as.character(income[[idcol]])
+  leftst[which(apply(leftst,1,function(r){length(which(is.na(r)))>0})),]<-rep(0,ncol(leftst));leftst[[idcol]]=as.character(income[[idcol]])
+  rownames(rightst)<-as.character(income[[idcol]])
+  rightst[which(apply(rightst,1,function(r){length(which(is.na(r)))>0})),]<-rep(0,ncol(rightst));rightst[[idcol]]=as.character(income[[idcol]])
   
   structure = (rightst[,cols] - leftst[,cols]) / (rightyear - leftyear) * numyear + leftst[,cols] - leftyear * (rightst[,cols] - leftst[,cols]) / (rightyear - leftyear) 
   structure$IRIS = as.character(income$IRIS)
