@@ -11,6 +11,13 @@ library(dplyr)
 
 ###############
 #' 
+#' TODO
+#'   * check sparse optimization (remove small csp shares ?)
+#'   * mixed kernel types
+#'   * restrict/increase number of parameters (10 params -> overfit ?) // add AIC fit criteria ?
+#'   * hierarchically conditioned ? (dep data e.g. for reference incomes per csp ?)
+#'   * multilevel + gwr in application (Q : spatial stationarity of link incomestructure <-> bien variables) 
+#' 
 #' Optimize kernels parameters for inverse kernel mixture problem
 #' 
 #' for all j, f(x_j) = \sum w_c k_c(x_j,\vec{\alpha})
