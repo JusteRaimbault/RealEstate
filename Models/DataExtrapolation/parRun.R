@@ -61,10 +61,10 @@ for(year in years){
   show(year)
   load(paste0('res/extr_20',year,'_',idcol,'.RData'))
   firstind = which(sapply(estimations,length)>8)[1]
-  cols = length(estimations[[firstind]]$medincome)*4+4
+  cols = length(estimations[[firstind]]$medincome)*4+5
   currentdata = sapply(estimations,function(l){
     #show(length(l))
-    res = rep(NA,cols)
+    res = c(rep(NA,cols-1),paste0("20",year))
     if(length(l)>1){
       res = c(l$id,
               l$medincome,
@@ -73,7 +73,8 @@ for(year in years){
               l$shares,
               l$distrib,
               l$gaussianvalmax,
-              l$lognormalvalmax
+              l$lognormalvalmax,
+              paste0("20",year)
       )
     }
     return(res)
@@ -86,8 +87,8 @@ for(year in years){
     byrow = T)
   )
 }
-names(fullres)<-c("id",paste0('medIncome_',csp),paste0('avgIncome_',csp),paste0('stdIncome_',csp),paste0('share_',csp),
-                  'distribution','optgaussian','optlognormal'
+names(fullres)<-c("idcom",paste0('medIncome_',csp),paste0('avgIncome_',csp),paste0('stdIncome_',csp),paste0('share_',csp),
+                  'distribution','optgaussian','optlognormal','year'
                   )
 for(j in (1:ncol(fullres))[c(-1,-22)]){fullres[,j]<-as.numeric(as.character(fullres[,j]))}
 as.tbl(fullres)
