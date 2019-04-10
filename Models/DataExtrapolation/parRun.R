@@ -3,8 +3,8 @@ setwd(paste0(Sys.getenv('CS_HOME'),'/RealEstate/Models/DataExtrapolation/'))
 
 source('inverseKernels.R')
 
-#years = c('01','02','03','04','05','06','07','08','09','10','11')
-years=c('07','08','09','10','11')
+years = c('01','02','03','04','05','06','07','08','09','10','11')
+#years=c('07','08','09','10','11')
 
 csp = c("EMP","OUV","INT","ART","CAD")
 
@@ -104,9 +104,35 @@ fullres=fullres[which(nchar(as.character(fullres$id))>0),]
 
 write.table(fullres,file='res/extrapolate_allyears_communes.csv',sep = ';',row.names = F,col.names = T)
 
+#
+summary(as.tbl(fullres)%>% group_by(year))
 
 
+######
+# consolidate with input data
 
+extrapolated <- as.tbl(read.csv(file='res/extrapolate_allyears_communes.csv',sep=';'))
 
+# get input data : median rfuc ; nbuc
+inputdata = data.frame()
+for(year in years){
+  income <- getIncome(year,idcol=idcol)
+  inds = !is.na(income[[paste0('RFUCQ2',year)]])
+  inputdata=rbind(inputdata,data.frame(medIncome=income[[paste0('RFUCQ2',year)]][inds],
+                                       nbUC=income[[paste0('NBUC',year)]][inds],
+                                       idcom=income[['COM']][inds],
+                                       year=rep(paste0('20',year),length(which(inds)))
+                                       ))
+}
+
+inputdata=as.tbl(inputdata)
+inputdata$year <- as.numeric(as.character(inputdata$year))
+
+#apply(income,2,function(r){length(which(is.na(r)))})
+# -> median income is RFUCQ211
+
+consolidated <- left_join(extrapolated,inputdata,by=c('idcom','year'))
+
+write.table(consolidated,file='res/extrapolate_allyears_communes_CONSOLIDATED.csv',sep = ';',row.names = F,col.names = T)
 
 
