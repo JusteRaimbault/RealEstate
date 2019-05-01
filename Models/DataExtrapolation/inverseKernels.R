@@ -163,9 +163,10 @@ inverseKernels<-function(histogram,weights,ker,initialParams,paramsBounds = NULL
 estimateParameters<-function(id,income,structure,year,iters.max=1000,
                              structure_col_names=c("ART","CAD","INT","EMP","OUV"),
                              csp_ordered=c("EMP","OUV","INT","ART","CAD"),
-                             idcol='IRIS'
+                             idcol='IRIS',
+                             income_col_prefixes = c("RFUCD1","RFUCD2","RFUCD3","RFUCD4","RFUCQ2","RFUCD6","RFUCD7","RFUCD8","RFUCD9")
                              ){
-  income_col_names=paste0(c("RFUCD1","RFUCD2","RFUCD3","RFUCD4","RFUCQ2","RFUCD6","RFUCD7","RFUCD8","RFUCD9"),year)
+  income_col_names=paste0(income_col_prefixes,year)
   distr = c(unlist(income[income[[idcol]]==id,income_col_names]))
   
   # compute only for full distribs
@@ -300,8 +301,8 @@ plotRes <- function(res){
 
 #'
 #' specific function to load income data
-getIncome <- function(year,idcol='IRIS'){
-  incfile = paste0('data/revenus',ifelse(idcol=='COM',paste0('_com',year),year),'.csv')
+getIncome <- function(year,idcol='IRIS',dispo=''){
+  incfile = paste0('data/revenus',dispo,ifelse(idcol=='COM',paste0('_com',year),year),'.csv')
   return(as.tbl(read.csv(file=incfile,sep=';',stringsAsFactors = F,header = T,dec = ',' )))
 }
 
