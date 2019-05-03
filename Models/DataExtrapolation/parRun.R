@@ -56,70 +56,73 @@ stopCluster(cl)
 
 # year = '01'
 # load(paste0('res/extr_20',year,'_',idcol,'.RData'))
+load(paste0('res/extr_20',year,'_',idcol,'_dispo.RData'))
 # sapply(estimations,length)
 # estimations[[5]]
 # test=list();for(k in 1:6){test[[k]]=estimations[[k]]}
 # testc=list();for(k in 1:6){testc=append(testc,flatten(estimations[[k]]))}
 
 
-# 
-# fullres=data.frame()
-# for(year in years){
-#   show(year)
-#   load(paste0('res/extr_20',year,'_',idcol,'.RData'))
-#   firstind = which(sapply(estimations,length)>8)[1]
-#   cols = length(estimations[[firstind]]$medincome)*4+5
-#   currentdata = sapply(estimations,function(l){
-#     #show(length(l))
-#     res = c(rep(NA,cols-1),paste0("20",year))
-#     if(length(l)>1){
-#       res = c(l$id,
-#               l$medincome,
-#               l$avincome,
-#               l$stdincome,
-#               l$shares,
-#               l$distrib,
-#               l$gaussianvalmax,
-#               l$lognormalvalmax,
-#               paste0("20",year)
-#       )
-#     }
-#     return(res)
-#   }
-#                        
-#                        )
-#   
-#   fullres = rbind(fullres,matrix(
-#     currentdata,ncol=cols,
-#     byrow = T)
-#   )
-# }
-# names(fullres)<-c("idcom",paste0('medIncome_',csp),paste0('avgIncome_',csp),paste0('stdIncome_',csp),paste0('share_',csp),
-#                   'distribution','optgaussian','optlognormal','year'
-#                   )
-# for(j in (1:ncol(fullres))[c(-1,-22)]){fullres[,j]<-as.numeric(as.character(fullres[,j]))}
+
+
+ fullres=data.frame()
+ for(year in years){
+   show(year)
+   load(paste0('res/extr_20',year,'_',idcol,'_dispo.RData'))
+   firstind = which(sapply(estimations,length)>8)[1]
+   cols = length(estimations[[firstind]]$medincome)*4+5
+   currentdata = sapply(estimations,function(l){
+     show(length(l))
+     res = c(rep(NA,cols-1),paste0("20",year))
+     if(length(l)>1){
+       res = c(l$id,
+               l$medincome,
+               l$avincome,
+               l$stdincome,
+               l$shares,
+               l$distrib,
+               l$gaussianvalmax,
+               l$lognormalvalmax,
+               paste0("20",year)
+       )
+     }
+     return(res)
+   }
+
+                        )
+
+   fullres = rbind(fullres,matrix(
+     currentdata,ncol=cols,
+     byrow = T)
+   )
+ }
+ names(fullres)<-c("idcom",paste0('medIncome_',csp),paste0('avgIncome_',csp),paste0('stdIncome_',csp),paste0('share_',csp),
+                   'distribution','optgaussian','optlognormal','year'
+                   )
+ for(j in (1:ncol(fullres))[c(-1,-22)]){fullres[,j]<-as.numeric(as.character(fullres[,j]))}
 # as.tbl(fullres)
-# 
+#
 # # table(as.character(sapply(estimations,length)))
 # # for year 2001 : more than 1/2 with no data !
-# #1  13   8 
-# #1 528 771 
-# 
+# #1  13   8
+# #1 528 771
+#
 # # filter 0 and NAs
 # #length(which(nchar(as.character(fullres$id))>0))
-# fullres=fullres[which(nchar(as.character(fullres$id))>0),]
-# 
-# write.table(fullres,file='res/extrapolate_allyears_communes.csv',sep = ';',row.names = F,col.names = T)
-# 
+fullres=fullres[which(nchar(as.character(fullres$id))>0),]
+
+#write.table(fullres,file='res/extrapolate_allyears_communes.csv',sep = ';',row.names = F,col.names = T)
+write.table(fullres,file='res/extrapolate_allyears_communes_dispo.csv',sep = ';',row.names = F,col.names = T)
+
 # #
-# summary(as.tbl(fullres)%>% group_by(year))
-# 
-# 
+summary(as.tbl(fullres)%>% group_by(year))
+#
+#
 # ######
 # # consolidate with input data
-# 
-# extrapolated <- as.tbl(read.csv(file='res/extrapolate_allyears_communes.csv',sep=';'))
-# 
+#
+extrapolated <- as.tbl(read.csv(file='res/extrapolate_allyears_communes.csv',sep=';'))
+#
 # # get input data : median rfuc ; nbuc
 # inputdata = data.frame()
 # for(year in years){
@@ -131,15 +134,15 @@ stopCluster(cl)
 #                                        year=rep(paste0('20',year),length(which(inds)))
 #                                        ))
 # }
-# 
+#
 # inputdata=as.tbl(inputdata)
 # inputdata$year <- as.numeric(as.character(inputdata$year))
-# 
+#
 # #apply(income,2,function(r){length(which(is.na(r)))})
 # # -> median income is RFUCQ211
-# 
+#
 # consolidated <- left_join(extrapolated,inputdata,by=c('idcom','year'))
-# 
+#
 # write.table(consolidated,file='res/extrapolate_allyears_communes_CONSOLIDATED.csv',sep = ';',row.names = F,col.names = T)
-# 
+#
 

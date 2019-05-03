@@ -26,6 +26,9 @@ znivvie = extrapolated_insee_znivvie[extrapolated_insee_znivvie$year==2011,]
 
 # TODO launch revdisp extrapolation
 #extrapolated_insee_revdisp <- ...
+extrapolated_insee_revdispo <- as.tbl(read.csv('../DataExtrapolation/res/extrapolate_allyears_communes_dispo.csv',sep=';'))
+revdispo = extrapolated_insee_revdispo[extrapolated_insee_revdispo$year==2011,]
+
 
 # Q : median or average income ?
 
@@ -34,11 +37,22 @@ znivvie = extrapolated_insee_znivvie[extrapolated_insee_znivvie$year==2011,]
 biencsps = c('Prof_intermediaires'='INT','Com_art_Chef_entreprises'='ART','Employes'='EMP','CPIS'='CAD','Ouvriers'='OUV')
 bien$CSP = biencsps[as.character(bien$acquereurs)]
 
+# filter artisants
+bien = bien[bien$CSP!='ART',]
+
+bien$REQ_PRIX = as.numeric(as.character(bien$REQ_PRIX))
+
+
 bien$medianZnivvie = rep(NA,nrow(bien))
+bien$medianRevdispo = rep(NA,nrow(bien))
 for(csp in unique(bien$CSP)){
   show(csp)
   currentMedIncs = znivvie[[paste0('medIncome_',csp)]];names(currentMedIncs)=znivvie$idcom
   bien$medianZnivvie[bien$CSP==csp]=currentMedIncs[as.character(bien$DepCom[bien$CSP==csp])]
+  
+  currentMedIncs = revdispo[[paste0('medIncome_',csp)]];names(currentMedIncs)=revdispo$idcom
+  bien$medianRevdispo[bien$CSP==csp]=currentMedIncs[as.character(bien$DepCom[bien$CSP==csp])]
+  
 }
 
 # summary(bien$medianZnivvie)
@@ -48,7 +62,7 @@ for(csp in unique(bien$CSP)){
 
 # TODO
 #bien$medianRevdispo = ...
-bien$medianRevdispo = rep(50000,nrow(bien))
+#bien$medianRevdispo = rep(50000,nrow(bien))
 
 
 #######
@@ -68,7 +82,7 @@ for(csp in unique(consolidated$CSP)){
 
 explicative = c('AGE','PRIX',paste0('CSP_',unique(consolidated$CSP)),'medianZnivvie','medianRevdispo')
 
-model_names = c('AGEPR'='AGE','RESPRIACH'='PRIX','CSPRprof_inter'='CSP_INT','CSPRprof_inter.1'='CSP_ART','CSPRouvriers'='CSP_OUV',
+model_names = c('AGEPR'='AGE','RESPRIACH'='PRIX','CSPRprof_inter'='CSP_INT','CSPRouvriers'='CSP_OUV',
                 'CSPRemployes'='CSP_EMP','CSPRCPIS'='CSP_CAD','ZNIVVIE'='medianZnivvie','Rev_Disp'='medianRevdispo')
 models_coefs = patrimoine_models[,c('AGEPR','RESPRIACH','CSPRprof_inter','CSPRprof_inter','CSPRouvriers','CSPRemployes','CSPRCPIS','ZNIVVIE','Rev_Disp')]
 names(models_coefs)<- model_names[names(models_coefs)]
