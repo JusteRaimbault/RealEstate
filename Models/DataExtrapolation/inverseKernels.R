@@ -166,6 +166,7 @@ estimateParameters<-function(id,income,structure,year,iters.max=1000,
                              idcol='IRIS',
                              income_col_prefixes = c("RFUCD1","RFUCD2","RFUCD3","RFUCD4","RFUCQ2","RFUCD6","RFUCD7","RFUCD8","RFUCD9")
                              ){
+  show(names(income))
   income_col_names=paste0(income_col_prefixes,year)
   distr = c(unlist(income[income[[idcol]]==id,income_col_names]))
   

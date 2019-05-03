@@ -30,7 +30,7 @@ for(year in years){
   show(names(income))
   
   # FIXME change if uc or not
-  income_col_prefixes = c('RFMD111','RFMD211','RFMD311','RFMD411','RFMQ211','RFMD611','RFMD711','RFMD811','RFMD911')
+  income_col_prefixes = c('RFMD1','RFMD2','RFMD3','RFMD4','RFMQ2','RFMD6','RFMD7','RFMD8','RFMD9')
   
    estimations <- foreach(i=1:nrow(income)) %dopar% {
      show(paste0("row : ",i," / ",n))
