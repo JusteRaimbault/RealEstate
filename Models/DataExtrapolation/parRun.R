@@ -26,7 +26,8 @@ for(year in years){
   structure <-getStructure(year,idcol=idcol)
     
   n = length(income[[idcol]])
-  #show(n)
+  show(n)
+  show(names(income))
   
   # FIXME change if uc or not
   income_col_prefixes = c('RFMD111','RFMD211','RFMD311','RFMD411','RFMQ211','RFMD611','RFMD711','RFMD811','RFMD911')
