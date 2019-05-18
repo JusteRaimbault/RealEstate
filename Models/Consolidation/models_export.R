@@ -68,7 +68,7 @@ for(var in unique(models$explainedvar)){
     c('',varnames[[var]],'','','','',''),
     c('Modèle','','BIEN','','','INSEE',''),
     c('Variable','Coef.','Err. Std.','','Coef.','Err. Std.','')
-    ,modeldf,as.character(c('Adj. R squared',selmodels$AdjRSquared[selmodels$type=='BIEN'],selmodels$AdjRSquared[selmodels$type=='INSEE'])),stringsAsFactors = F)
+    ,modeldf,as.character(c('Adj. R2',selmodels$AdjRSquared[selmodels$type=='BIEN'],'','',selmodels$AdjRSquared[selmodels$type=='INSEE'],'','')),stringsAsFactors = F)
   #for(j in 1:ncol(modeldf)){modeldf[,j]=as.factor(modeldf[,j])}
   
   res = stargazer(
