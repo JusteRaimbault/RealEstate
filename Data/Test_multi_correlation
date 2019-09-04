@@ -1,0 +1,23 @@
+
+First test : correlation and logistic linear on "achat avec emprunt".
+The population : Only transaction information through buying (no heritage or donation), with People living in IDF ; Transactions from 1996 to 2012. 
+Variables selected after correlation test (in order of correlation results) : 
+AGEPR (age of the household master),
+Annee_acquisition (year of buying, more than 1995)
+Retraite, 
+Cadres,
+Intermédiaires,
+REV_BY_UC (income by consommation unit of Insee),
+Surf_log (size in sq meter of the house)
+Employe
+
+Regression results : see the picture for more informations
+Intercept : -6.01e+01
+AGEPR : -1.247e-02
+Annee_acquisition : 3.057e-02
+Retraite : 8.611e-02
+Cadres : 7.342e-02
+Intermédiaires : 1.49e-01
+REV_BY_UC : 2.817e-07
+Surf_log : -1.149e-04
+Employe : 1.493e-01

@@ -11,6 +11,13 @@ library(dplyr)
 
 ###############
 #' 
+#' TODO
+#'   * check sparse optimization (remove small csp shares ?)
+#'   * mixed kernel types
+#'   * restrict/increase number of parameters (10 params -> overfit ?) // add AIC fit criteria ?
+#'   * hierarchically conditioned ? (dep data e.g. for reference incomes per csp ?)
+#'   * multilevel + gwr in application (Q : spatial stationarity of link incomestructure <-> bien variables) 
+#' 
 #' Optimize kernels parameters for inverse kernel mixture problem
 #' 
 #' for all j, f(x_j) = \sum w_c k_c(x_j,\vec{\alpha})
@@ -153,13 +160,19 @@ inverseKernels<-function(histogram,weights,ker,initialParams,paramsBounds = NULL
 #''
 #' General function estimating parameter for homogenous kernels (tested : gaussian and log-normal)
 #'
-estimateParameters<-function(iris,income,structure,year,iters.max=1000,
+estimateParameters<-function(id,income,structure,year,iters.max=1000,
                              structure_col_names=c("ART","CAD","INT","EMP","OUV"),
-                             csp_ordered=c("EMP","OUV","INT","ART","CAD")){
-  income_col_names=paste0(c("RFUCD1","RFUCD2","RFUCD3","RFUCD4","RFUCQ2","RFUCD6","RFUCD7","RFUCD8","RFUCD9"),year)
-  distr = c(unlist(income[income$IRIS==iris,income_col_names]))
+                             csp_ordered=c("EMP","OUV","INT","ART","CAD"),
+                             idcol='IRIS',
+                             income_col_prefixes = c("RFUCD1","RFUCD2","RFUCD3","RFUCD4","RFUCQ2","RFUCD6","RFUCD7","RFUCD8","RFUCD9")
+                             ){
+  show(names(income))
+  income_col_names=paste0(income_col_prefixes,year)
+  distr = c(unlist(income[income[[idcol]]==id,income_col_names]))
+  
+  # compute only for full distribs
   if(length(which(is.na(distr)))==0){
-    shares = c(unlist(structure[structure$IRIS==iris,structure_col_names]))#/c(unlist(structure[structure$IRIS==iris,"POPTOT"]))
+    shares = c(unlist(structure[structure[[idcol]]==id,structure_col_names]))
     shares=shares/sum(shares)
     
     # gaussian fit
@@ -192,7 +205,7 @@ estimateParameters<-function(iris,income,structure,year,iters.max=1000,
       avincome = resgaussian$parameters[seq(from=1,to=length(resgaussian$parameters),by=2)]
       medincome = resgaussian$parameters[seq(from=1,to=length(resgaussian$parameters),by=2)]
       stdincome = resgaussian$parameters[seq(from=2,to=length(resgaussian$parameters),by=2)]
-      ord = order(medincome);
+      #ord = order(medincome);
     }else{
       distrib = "lognormal"
       res = reslognormal
@@ -201,11 +214,12 @@ estimateParameters<-function(iris,income,structure,year,iters.max=1000,
       avincome = exp(mu + sigma^2/2)
       medincome = exp(mu)
       stdincome = sqrt(exp(2*mu + sigma^2)*(exp(sigma^2)-1))
-      ord = order(medincome);
+      #ord = order(medincome);
     }
   
-   medincome=medincome[ord];avincome=avincome[ord];stdincome=stdincome[ord];shares=shares[ord]
-   names(avincome)=csp_ordered;names(medincome)=csp_ordered;names(stdincome)=csp_ordered;names(shares)=csp_ordered
+    # DO NOT REORDER
+   #medincome=medincome[ord];avincome=avincome[ord];stdincome=stdincome[ord];shares=shares[ord]
+   #names(avincome)=csp_ordered;names(medincome)=csp_ordered;names(stdincome)=csp_ordered;names(shares)=csp_ordered
 
    #show(csp_ordered[ord])
    #show("--------------")
@@ -224,8 +238,10 @@ estimateParameters<-function(iris,income,structure,year,iters.max=1000,
     res$gaussianvalmax = resgaussian$valmax
     res$lognormalvalmax = reslognormal$valmax
     
+    res$id = id
+    
     return(res)
-  }else{return(list(avincome=rep(0,5),medincome=rep(0,5),stdincome=rep(0,5),shares=rep(0,5),distrib="",gaussianvalmax=0,lognormalvalmax=0))}
+  }else{return(list(avincome=rep(0,5),medincome=rep(0,5),stdincome=rep(0,5),shares=rep(0,5),distrib="",gaussianvalmax=0,lognormalvalmax=0,id=""))}
 }
 
 
@@ -287,34 +303,47 @@ plotRes <- function(res){
 
 #'
 #' specific function to load income data
-getIncome <- function(year){return(as.tbl(read.csv(file=paste0('data/revenus',year,'.csv'),sep=';',stringsAsFactors = F,header = T,dec = ',' )))}
+getIncome <- function(year,idcol='IRIS',dispo=''){
+  incfile = paste0('data/revenus',dispo,ifelse(idcol=='COM',paste0('_com',year),year),'.csv')
+  return(as.tbl(read.csv(file=incfile,sep=';',stringsAsFactors = F,header = T,dec = ',' )))
+}
 
 #'
 #' structure
-getStructure <- function(year,cols=c('ART','CAD','INT','EMP','OUV')){
-  income = as.tbl(read.csv(file=paste0('data/revenus',year,'.csv'),sep=';',stringsAsFactors = F,header = T,dec = ',' ))
-  structure99 = read.csv(file='data/structure99.csv',sep=';',stringsAsFactors = F);rownames(structure99)=structure99$IRIS
-  structure07 = read.csv(file='data/structure07.csv',sep=';',stringsAsFactors = F);rownames(structure07)=structure07$IRIS
-  structure11 = read.csv(file='data/structure11.csv',sep=';',stringsAsFactors = F);rownames(structure11)=structure11$IRIS
+getStructure <- function(year,cols=c('ART','CAD','INT','EMP','OUV'),idcol="IRIS"){
+  
+  # change income file name in case of a commune aggregation
+  incfile = paste0('data/revenus',ifelse(idcol=='COM',paste0('_com',year),year),'.csv')
+  
+  income = as.tbl(read.csv(file=incfile,sep=';',stringsAsFactors = F,header = T,dec = ',' ))
+  structure99 = read.csv(file='data/structure99.csv',sep=';',stringsAsFactors = F);
+  if(idcol=='COM'){structure99=as.data.frame(as.tbl(structure99)%>%group_by(COM)%>%summarize(ART=sum(ART),CAD=sum(CAD),INT=sum(INT),EMP=sum(EMP),OUV=sum(OUV)))}
+  rownames(structure99)=structure99[[idcol]]
+  structure07 = read.csv(file='data/structure07.csv',sep=';',stringsAsFactors = F);
+  if(idcol=='COM'){structure07=as.data.frame(as.tbl(structure07)%>%group_by(COM)%>%summarize(ART=sum(ART),CAD=sum(CAD),INT=sum(INT),EMP=sum(EMP),OUV=sum(OUV)))}
+  rownames(structure07)=structure07[[idcol]]
+  structure11 = read.csv(file='data/structure11.csv',sep=';',stringsAsFactors = F);
+  if(idcol=='COM'){structure11=as.data.frame(as.tbl(structure11)%>%group_by(COM)%>%summarize(ART=sum(ART),CAD=sum(CAD),INT=sum(INT),EMP=sum(EMP),OUV=sum(OUV)))}
+  rownames(structure11)=structure11[[idcol]]
   
   numyear = as.numeric(paste0('20',year))
   
   if(numyear > 1999&numyear <= 2007){
-    leftst = structure99[as.character(income$IRIS),];rightst = structure07[as.character(income$IRIS),]
+    leftst = structure99[as.character(income[[idcol]]),];rightst = structure07[as.character(income[[idcol]]),]
     leftyear=1999;rightyear = 2007
   }
   if(numyear > 2007&numyear <= 2011){
-    leftst = structure07[as.character(income$IRIS),];rightst = structure11[as.character(income$IRIS),]
+    leftst = structure07[as.character(income[[idcol]]),];rightst = structure11[as.character(income[[idcol]]),]
     leftyear=2007;rightyear = 2011
   }
   
-  rownames(leftst)<-as.character(income$IRIS)
-  leftst[which(apply(leftst,1,function(r){length(which(is.na(r)))>0})),]<-rep(0,ncol(leftst));leftst$IRIS=as.character(income$IRIS)
-  rownames(rightst)<-as.character(income$IRIS)
-  rightst[which(apply(rightst,1,function(r){length(which(is.na(r)))>0})),]<-rep(0,ncol(rightst));rightst$IRIS=as.character(income$IRIS)
+  rownames(leftst)<-as.character(income[[idcol]])
+  leftst[which(apply(leftst,1,function(r){length(which(is.na(r)))>0})),]<-rep(0,ncol(leftst));leftst[[idcol]]=as.character(income[[idcol]])
+  rownames(rightst)<-as.character(income[[idcol]])
+  rightst[which(apply(rightst,1,function(r){length(which(is.na(r)))>0})),]<-rep(0,ncol(rightst));rightst[[idcol]]=as.character(income[[idcol]])
   
   structure = (rightst[,cols] - leftst[,cols]) / (rightyear - leftyear) * numyear + leftst[,cols] - leftyear * (rightst[,cols] - leftst[,cols]) / (rightyear - leftyear) 
-  structure$IRIS = as.character(income$IRIS)
+  structure[[idcol]] = as.character(income[[idcol]])
   
   return(structure)
   

@@ -5,52 +5,71 @@ val i = Val[Int]
 val year = Val[String]
 
 // res
-val iris = Val[String]
+val com = Val[String]
 val medianIncome = Val[Array[Double]]
 val avgIncome = Val[Array[Double]]
+val stdIncome = Val[Array[Double]]
 val shares = Val[Array[Double]]
 val distrib = Val[String]
+val gaussianMax = Val[Double]
+val lognormalMax = Val[Double]
 
 val extrapolate =  RTask("""
       source('inverseKernels.R')
-      income <- getIncome(year)
-      structure <-getStructure(year)
+
+      idcol = "COM"
+
+      income <- getIncome(year,idcol=idcol)
+      structure <-getStructure(year,idcol=idcol)
+
       show(paste0("year = ",year," ; ",nrow(income)))
       if(i <= nrow(income)){
-        iris = income$IRIS[i]
-        est = estimateParameters(iris,income,structure,year,iters.max=500)
+        id=income[[idcol]][i]
+        est = estimateParameters(iris,income,structure,year,iters.max=1000,idcol=idcol)
         med = est$medincome
         avg = est$avincome
-	shares = est$shares
-	distrib = est$distrib	
+        std = est$stdincome
+	      shares = est$shares
+	      distrib = est$distrib
+        gaussianvalmax=est$gaussianvalmax
+        lognormalvalmax=est$lognormalvalmax
       }else{iris="0";med=rep(0,5);avg=rep(0,5);shares=rep(0,5);distrib=""}
     """,
     libraries = Seq("GA","MASS","dplyr")
     ) set(
       resources += workDirectory / "inverseKernels.R",
       resources += workDirectory / "data",
-      rInputs += (year, "year"),
-      rInputs += (i,"i"),
-      rOutputs += ("iris",iris),
-      rOutputs += ("med",medianIncome),
-      rOutputs += ("avg",avgIncome),
-      rOutputs += ("shares",shares),
-      rOutputs += ("distrib",distrib),
+      inputs += year mapped "year",
+      inputs += i mapped "i",
+      outputs += com mapped "id",
+      outputs += medianIncome mapped "med",
+      outputs += avgIncome mapped "avg",
+      outputs += stdIncome mapped "std",
+      outputs += shares mapped "shares",
+      outputs += distrib mapped "distrib",
+      outputs += gaussianMax mapped "gaussianvalmax",
+      outputs += lognormalMax mapped "lognormalvalmax",
       inputs += (year,i),
       outputs += (year,i)
     )
 
-val purpose = "FULL_GRID"
+//val purpose = "FULL_GRID"
+val purpose = "TEST"
 
-val indics = CSVHook(workDirectory / "res" / "extrapolate_"+purpose+"_"+((new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss")).format(new Date()))+".csv") set (arraysOnSingleRow := true)
+val indics = CSVHook(workDirectory / "res" / "extrapolate_"+purpose+"_"+((new SimpleDateFormat("yyyyMMdd_HHmm")).format(new Date()))+".csv") set (arraysOnSingleRow := true)
 
-val grid =  EGIEnvironment("vo.complex-systems.eu")
-//val local = LocalEnvironment(10)
+//val env =  EGIEnvironment("vo.complex-systems.eu")
+val env = LocalEnvironment(1)
 
 // exploration
 val extrapolateall = DirectSampling(
-    evaluation = extrapolate hook indics on grid,
-    sampling = (year in Seq("01","02","04","05","06","07","08","09","10","11")) x (i in 1 to 4175 by 1)
+    evaluation = extrapolate hook indics on env by 1,
+    sampling =
+      (year is "01") x
+      //(year in Seq("01","02","03","04","05","06","07","08","09","10","11")) x
+    //(i in 1 to 4175 by 1) // IRIS
+    //(i in 1 to 1300 by 1)
+    (i is 5)
 )
 
 

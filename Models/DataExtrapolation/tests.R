@@ -3,6 +3,34 @@ setwd(paste0(Sys.getenv('CS_HOME'),'/RealEstate/Models/DataExtrapolation/'))
 source('inverseKernels.R')
 
 
+## Test oml script
+
+year = "10"
+i=5
+idcol='COM'
+
+#source('inverseKernels.R')
+income <- getIncome(year,idcol=idcol)
+structure <-getStructure(year,idcol=idcol)
+show(paste0("year = ",year," ; ",nrow(income)))
+#if(i <= nrow(income)){
+  #iris = income$IRIS[i]
+  id=income[[idcol]][i]
+  est = estimateParameters(id,income,structure,year,iters.max=100,idcol=idcol)#500)
+  
+  med = est$medincome
+  avg = est$avincome
+  std = est$stdincome
+  shares = est$shares
+  distrib = est$distrib	
+  gaussianvalmax=est$gaussianvalmax
+  lognormalvalmax=est$lognormalvalmax
+#}else{iris="0";med=rep(0,5);avg=rep(0,5);shares=rep(0,5);distrib=""}
+
+show(est)
+
+sum(as.numeric(apply(income,1,function(r){length(which(is.na(r)))==0})))
+
 
 
 ## tests
