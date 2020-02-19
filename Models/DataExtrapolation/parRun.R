@@ -31,7 +31,7 @@ for(year in years){
   show(names(income))
   
   # FIXME change if uc or not
-  income_col_prefixes = c('RFMD1','RFMD2','RFMD3','RFMD4','RFMQ2','RFMD6','RFMD7','RFMD8','RFMD9')
+  #income_col_prefixes = c('RFMD1','RFMD2','RFMD3','RFMD4','RFMQ2','RFMD6','RFMD7','RFMD8','RFMD9')
   
    estimations <- foreach(i=1:nrow(income)) %dopar% {
      show(paste0("row : ",i," / ",n))
@@ -41,7 +41,7 @@ for(year in years){
      
      show(paste0("Estimating : ",id))
      source('inverseKernels.R')
-     return(estimateParameters(id,income,structure,year,iters.max=500,idcol=idcol,income_col_prefixes=income_col_prefixes))
+     return(estimateParameters(id,income,structure,year,iters.max=500,idcol=idcol))#,income_col_prefixes=income_col_prefixes))
      },error=function(e){show(e);return(NA)})
    }
    
